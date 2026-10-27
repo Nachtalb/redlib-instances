@@ -158,8 +158,9 @@ The script will process the CSV and for each row fetch `<url>/info.json` and rea
     "url": "<url>",
     "version": "<version; null if bot detection blocks /info.json>",
     "status": "<online, or untestable if bot detection blocks /info.json>",
-    "flavour": "<flavour from /info.json if the instance runs a fork that reports one; null otherwise>",
+    "flavour": "<flavour from /info.json if the instance runs a fork that reports one, else the owner in REDLIB_SOURCE_URL (unless it is redlib-org); null otherwise>",
     "commit": "<short git commit if a flavour is set; null otherwise>",
+    "source": "<REDLIB_SOURCE_URL from /info.json if the instance sets one; null otherwise>",
     "post": "<ok, failed or untestable; null for onion and I2P sites>",
     "cloudflare": <true if cloudflare is enabled; null otherwise>,
     "description": "<description if non-empty; null otherwise>"

@@ -33,7 +33,12 @@
                     },
                     "flavour": {
                         "type": "string",
-                        "$comment": "Flavour of a fork that reports one in /info.json, e.g. nachtalb."
+                        "$comment": "Flavour of a fork that reports one in /info.json, e.g. nachtalb, else the owner in its REDLIB_SOURCE_URL (unless it is redlib-org)."
+                    },
+                    "source": {
+                        "type": "string",
+                        "format": "uri",
+                        "$comment": "Source code of the instance, from REDLIB_SOURCE_URL in /info.json."
                     },
                     "commit": {
                         "type": "string",

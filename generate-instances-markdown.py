@@ -97,9 +97,22 @@ WARNING: This script will overwrite the output file if it exists.
         sys.stderr.write("\t" + e.__str__() + "\n")
         return 1
 
-    table_preamble = "|URL|Network|Version|Post|Location|Behind Cloudflare?|Comment|\n|-|-|-|-|-|-|-|\n"
+    table_preamble = "|URL|Network|Version|Flavour|Post|Location|Behind Cloudflare?|Comment|\n|-|-|-|-|-|-|-|-|\n"
+    # Working posts first, then by whether /info.json could be read, then by
+    # URL.
+    post_rank = {"ok": 0, "failed": 1, "untestable": 2}
+    status_rank = {"online": 0, "untestable": 1}
+
+    def sort_key(instance):
+        url = instance.get("url") or instance.get("onion") or instance.get("i2p") or ""
+        return (
+            post_rank.get(instance.get("post"), 3),
+            status_rank.get(instance.get("status"), 2),
+            url.split("://", 1)[-1].lower(),
+        )
+
     table_rows = []
-    for instance in instances["instances"]:
+    for instance in sorted(instances["instances"], key=sort_key):
         url = ""
         network = ""
         version = ""
@@ -124,10 +137,12 @@ WARNING: This script will overwrite the output file if it exists.
         # /info.json.
         version = instance.get("version", "not testable")
 
-        if "flavour" in instance:
-            version = instance["flavour"]
-            if instance.get("commit"):
-                version += "@" + instance["commit"]
+        flavour = instance.get("flavour", "")
+        if flavour and instance.get("commit"):
+            flavour += "@" + instance["commit"]
+
+        if "source" in instance:
+            flavour = "[{}]({})".format(flavour or "source", instance["source"])
 
         post = {"ok": "\u2705", "failed": "\u274c", "untestable": "not testable"}.get(instance.get("post"), "")
 
@@ -147,10 +162,11 @@ WARNING: This script will overwrite the output file if it exists.
         except Exception:
             location = country
 
-        table_rows.append("|{0}|{1}|{2}|{3}|{4}|{5}|{6}|\n".format(
+        table_rows.append("|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|\n".format(
             url,
             network,
             version,
+            flavour,
             post,
             location,
             "\u2705" if cloudflare else "",

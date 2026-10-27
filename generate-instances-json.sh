@@ -509,6 +509,7 @@ create_instance_entry ()
     local version=
     local flavour=
     local commit=
+    local source=
     local json=
     local url_type="url"
     local -i rc=0
@@ -568,6 +569,22 @@ create_instance_entry ()
     fi
     version="$(<<<"${res}" jq -er '.crate_version' 2>/dev/null | sed -nE 's/^v?(([0-9]+\.){2}[0-9]+).*$/v\1/p')"
     flavour="$(<<<"${res}" jq -r '.flavour // empty' 2>/dev/null)"
+    source="$(<<<"${res}" jq -r '.config.REDLIB_SOURCE_URL // empty' 2>/dev/null)"
+    if [[ ! "${source}" =~ ^https?://[^[:space:]\|\(\)]+$ ]]
+    then
+        source=
+    fi
+
+    # Without a flavour, the owner in the source URL (GitHub, Codeberg,
+    # GitLab, ...) names the fork. redlib-org is upstream.
+    if [[ -z "${flavour}" && "${source}" =~ ^https?://[^/]+/([^/]+)/ ]]
+    then
+        flavour="${BASH_REMATCH[1]}"
+        if [[ "${flavour,,}" == "redlib-org" ]]
+        then
+            flavour=
+        fi
+    fi
     if [[ -n "${flavour}" ]]
     then
         commit="$(<<<"${res}" jq -r '.git_commit // empty' 2>/dev/null)"
@@ -609,6 +626,12 @@ create_instance_entry ()
     then
         json+=","
         json+="$(printf '"commit":%s' "$(jq -n --arg v "${commit}" '$v')")"
+    fi
+
+    if [[ -n "${source}" ]]
+    then
+        json+=","
+        json+="$(printf '"source":%s' "$(jq -n --arg v "${source}" '$v')")"
     fi
 
     if [[ "${url_type}" == "url" ]]
