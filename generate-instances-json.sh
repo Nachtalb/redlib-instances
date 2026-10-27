@@ -301,8 +301,8 @@ get ()
     local scheme=
     local zone=
     local -i rc=0
-    local -i tries=3
-    local -i timeout=30
+    local -i tries=2
+    local -i timeout=10
     local -a curl_cmd=(curl)
 
     while getopts "IT" opt
@@ -389,7 +389,7 @@ get ()
     # Do the GET. Try up to the number of times specified in the tries variable.
     for (( i = tries; i > 0; i-- ))
     do
-        "${curl_cmd[@]}" -m"${timeout}" -fs -- "${scheme}://${url_no_scheme}${path}"
+        "${curl_cmd[@]}" --connect-timeout 5 -m"${timeout}" -fs -- "${scheme}://${url_no_scheme}${path}"
         rc=$?
 
         if [[ ${rc} -eq 0 ]]
@@ -417,7 +417,7 @@ check_post ()
     local body=
     local code=
 
-    body="$(curl -A "${USER_AGENT}" -m30 -s -w '\n%{http_code}' -- "${1}${POST_PATH}")"
+    body="$(curl -A "${USER_AGENT}" --connect-timeout 5 -m10 -s -w '\n%{http_code}' -- "${1}${POST_PATH}")"
     code="${body##*$'\n'}"
     body="${body%$'\n'*}"
 
