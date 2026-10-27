@@ -120,13 +120,9 @@ WARNING: This script will overwrite the output file if it exists.
             # Couldn't determine network, so skip instance.
             continue
 
-        # Version is a required parameter. If this is not in the JSON, skip
-        # this instance.
-        if "version" not in instance:
-            sys.stderr.write("Skipping '{}': no version recorded".format(url))
-            continue
-        else:
-            version = instance["version"]
+        # Without a version, bot detection kept the checker from reading
+        # /info.json.
+        version = instance.get("version", "not testable")
 
         if "flavour" in instance:
             version = instance["flavour"]

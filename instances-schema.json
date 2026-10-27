@@ -24,7 +24,12 @@
                     "version": {
                         "type": "string",
                         "pattern": "^v([0-9]+\\.){2}[0-9]+$",
-                        "$comment": "Version of Libreddit running on this instance."
+                        "$comment": "Version of Libreddit running on this instance. Missing if bot detection blocks /info.json."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["online", "untestable"],
+                        "$comment": "online: /info.json answered. untestable: the instance is online, but bot detection blocks /info.json. Offline instances aren't listed."
                     },
                     "flavour": {
                         "type": "string",
@@ -59,8 +64,7 @@
                     }
                 },
                 "required": [
-                    "country",
-                    "version"
+                    "country"
                 ]
             }
         }

@@ -147,12 +147,13 @@ Each field described:
 
 ### Processing the CSV
 
-The script will process the CSV and for each row fetch `<url>/info.json` and read the version (`crate_version`) of the running instance. It also opens a post on each clearnet instance: `ok` if Redlib shows it, `failed` if Redlib answers without it (e.g. Reddit blocks the instance) or the instance is down, and `untestable` if something other than Redlib answers, usually bot detection. For each row, if the connection is successful and the script can determine the version, it will yield a JSON object (an "entry") of the form:
+The script will process the CSV and for each row fetch `<url>/info.json` and read the version (`crate_version`) of the running instance. Instances that answer with bot detection (a challenge page, a redirect on the same host, 401, 403 or 429, or a connection dropped after the TLS handshake) instead of `/info.json` are online but untestable: they are kept without a version. No response, a server error, another client error such as 404 or a redirect to another host means the instance is offline, and it is dropped. It also opens a post on each clearnet instance: `ok` if Redlib shows it, `failed` if Redlib answers without it (e.g. Reddit blocks the instance) or the instance is down, and `untestable` if something other than Redlib answers, usually bot detection. For each row, if the connection is successful and the script can determine the version, it will yield a JSON object (an "entry") of the form:
 
 ```json
 {
     "url": "<url>",
-    "version": "<version>",
+    "version": "<version; null if bot detection blocks /info.json>",
+    "status": "<online, or untestable if bot detection blocks /info.json>",
     "flavour": "<flavour from /info.json if the instance runs a fork that reports one; null otherwise>",
     "commit": "<short git commit if a flavour is set; null otherwise>",
     "post": "<ok, failed or untestable; null for onion and I2P sites>",

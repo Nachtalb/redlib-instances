@@ -272,12 +272,15 @@ canonicalize_url ()
 # get [-T] URL [PATH]
 #
 # Makes an HTTP(S) GET equest to the provided URL, plus PATH if given, with
-# curl. The response is written to standard out. get will determine if the URL
-# is an onion site, and, if so, it wrap the curl call with socks proxy. If the
-# URL is a I2P site, and I2P_HTTP_PROXY is non-empty, tell curl to use that as
-# the proxy.
+# curl. The response body is written to standard out, followed by a line with
+# the HTTP status code (000 if there was no response), the seconds until the
+# TLS handshake finished (0 if it didn't) and the redirect URL, if any,
+# separated by spaces. get will determine if
+# the URL is an onion site, and, if so, it wrap the curl call with socks proxy.
+# If the URL is a I2P site, and I2P_HTTP_PROXY is non-empty, tell curl to use
+# that as the proxy.
 #
-# The return value is the curl return value, or:
+# The return value is 0, or:
 #     100: no or blank URL provided
 #     101: invalid URL
 #     102: URL is an onion site, but we can't connect to tor
@@ -386,19 +389,43 @@ get ()
         curl_cmd=("${curl_cmd[@]}" -A "${USER_AGENT}")
     fi
 
-    # Do the GET. Try up to the number of times specified in the tries variable.
+    # Do the GET. Try up to the number of times specified in the tries
+    # variable while there is no response or a server error.
+    local res=
     for (( i = tries; i > 0; i-- ))
     do
-        "${curl_cmd[@]}" --connect-timeout 5 -m"${timeout}" -fs -- "${scheme}://${url_no_scheme}${path}"
-        rc=$?
+        res="$("${curl_cmd[@]}" --connect-timeout 5 -m"${timeout}" -s -w '\n%{http_code} %{time_appconnect} %{redirect_url}' -- "${scheme}://${url_no_scheme}${path}")"
 
-        if [[ ${rc} -eq 0 ]]
+        if ! offline "${url}" "${res##*$'\n'}"
         then
-            return
+            break
         fi
     done
 
-    return ${rc}
+    echo "${res}"
+}
+
+# offline URL "CODE TLS [REDIRECT]"
+#
+# Returns true if the response from get means the instance at URL isn't
+# running: no connection, a server error, a client error other than the 401,
+# 403 and 429 that bot detection answers with, or a redirect to another host.
+# A connection that is dropped after the TLS handshake (no response, but TLS
+# above 0) counts as bot detection.
+offline ()
+{
+    local host="${1#*://}"
+    local code= tls= redirect=
+
+    IFS=" " read -r code tls redirect <<<"${2}"
+    host="${host%%/*}"
+    redirect="${redirect#*://}"
+    redirect="${redirect%%/*}"
+
+    [[ "${code}" == 000 && "${tls}" =~ ^0(\.0*)?$ ]] && return
+    [[ "${code}" == 5* ]] && return
+    [[ "${code}" == 4* && "${code}" != 401 && "${code}" != 403 && "${code}" != 429 ]] && return
+    [[ "${code}" == 3* && -n "${redirect}" && "${redirect,,}" != "${host,,}" ]]
 }
 
 # Post that check_post opens. Archived, so it never changes.
@@ -409,7 +436,7 @@ POST_PATH="/r/announcements/comments/7jsyqt"
 # Opens POST_PATH on the instance and prints the result:
 #     ok: Redlib rendered the post.
 #     failed: Redlib answered without the post (e.g. Reddit blocks it), or the
-#         instance is down.
+#         instance is offline (see offline).
 #     untestable: something other than Redlib answered, usually bot detection
 #         (Cloudflare, Anubis, go-away) in front of the instance.
 check_post ()
@@ -417,19 +444,19 @@ check_post ()
     local body=
     local code=
 
-    body="$(curl -A "${USER_AGENT}" --connect-timeout 5 -m10 -s -w '\n%{http_code}' -- "${1}${POST_PATH}")"
+    body="$(get "${1}" "${POST_PATH}")"
     code="${body##*$'\n'}"
     body="${body%$'\n'*}"
 
     if [[ "${body}" == *'href="/style.css'* ]]
     then
-        if [[ "${code}" == 200 && "${body}" == *'class="post_title"'* ]]
+        if [[ "${code%% *}" == 200 && "${body}" == *'class="post_title"'* ]]
         then
             echo ok
         else
             echo failed
         fi
-    elif [[ "${code}" == 000 || "${code}" == 5* ]]
+    elif offline "${1}" "${code}"
     then
         echo failed
     else
@@ -453,10 +480,14 @@ check_post ()
 #
 # Option -I/-T will cause get to skip an onion/i2p site, respectively, and 100
 # will be returned.
+#
+# If bot detection keeps us from reading /info.json, the instance is online but
+# untestable: the entry has no version and 99 is returned.
 create_instance_entry ()
 {
     local cloudflare=n
     local res=
+    local code=
     local version=
     local flavour=
     local commit=
@@ -507,17 +538,14 @@ create_instance_entry ()
 
         return 2
     fi
-
-    if [[ -z "${res}" ]]
-    then
-        return 3
-    fi
+    code="${res##*$'\n'}"
+    res="${res%$'\n'*}"
 
     # Read the version from /info.json. Forks that set a flavour (e.g.
     # Nachtalb/redlib) are identified by flavour and commit instead, as their
     # crate version doesn't follow the fork's changes.
     version="$(<<<"${res}" jq -er '.crate_version' 2>/dev/null | sed -nE 's/^v?(([0-9]+\.){2}[0-9]+).*$/v\1/p')"
-    if [[ -z "${version}" ]]
+    if [[ -z "${version}" ]] && offline "${url}" "${code}"
     then
         return 4
     fi
@@ -543,8 +571,15 @@ create_instance_entry ()
     json+="$(printf '"%s":"%s"' "${url_type}" "${url}")"
     json+=","
     json+="$(printf '"country":"%s"' "${country}")"
-    json+=","
-    json+="$(printf '"version":"%s"' "${version}")"
+
+    if [[ -n "${version}" ]]
+    then
+        json+=","
+        json+="$(printf '"version":"%s"' "${version}")"
+        json+=',"status":"online"'
+    else
+        json+=',"status":"untestable"'
+    fi
 
     if [[ -n "${flavour}" ]]
     then
@@ -580,6 +615,11 @@ create_instance_entry ()
     json+="}"
 
     echo "${json}"
+
+    if [[ -z "${version}" ]]
+    then
+        return 99
+    fi
 }
 
 # helpdoc
@@ -886,14 +926,18 @@ main ()
         if [[ ${rc} -eq 0 ]]
         then
             IFS=$'\n' instance_entries+=("${instance_entry}")
-            echo "OK"
+            echo "ONLINE"
+        elif [[ ${rc} -eq 99 ]]
+        then
+            IFS=$'\n' instance_entries+=("${instance_entry}")
+            echo "ONLINE, UNTESTABLE"
         elif [[ ${rc} -eq 100 ]]
         then
             # rc=100 means the onion site is skipped because we told
             # create_instance_entry to skip the onion site.
             echo "SKIPPED"
         else
-            echo "FAILED"
+            echo "OFFLINE"
 
             if [[ "${failfast}" == "y" ]]
             then
@@ -927,7 +971,7 @@ main ()
     if [[ ${#failed[@]} -gt 0 ]]
     then
         {
-            echo "The following instances could not be reached:"
+            echo "The following instances are offline:"
             for failed_url in "${failed[@]}"
             do
                 echo -e "\t${failed_url}"
