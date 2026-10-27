@@ -128,6 +128,11 @@ WARNING: This script will overwrite the output file if it exists.
         else:
             version = instance["version"]
 
+        if "flavour" in instance:
+            version = instance["flavour"]
+            if instance.get("commit"):
+                version += "@" + instance["commit"]
+
         if "country" in instance:
             country = instance["country"]
 

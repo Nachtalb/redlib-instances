@@ -269,12 +269,13 @@ canonicalize_url ()
     echo "${url}"
 }
 
-# get [-T] URL
+# get [-T] URL [PATH]
 #
-# Makes an HTTP(S) GET equest to the provided URL with curl. The response is
-# written to standard out. get will determine if the URL is an onion site, and,
-# if so, it wrap the curl call with socks proxy. If the URL is a I2P site, and
-# I2P_HTTP_PROXY is non-empty, tell curl to use that as the proxy.
+# Makes an HTTP(S) GET equest to the provided URL, plus PATH if given, with
+# curl. The response is written to standard out. get will determine if the URL
+# is an onion site, and, if so, it wrap the curl call with socks proxy. If the
+# URL is a I2P site, and I2P_HTTP_PROXY is non-empty, tell curl to use that as
+# the proxy.
 #
 # The return value is the curl return value, or:
 #     100: no or blank URL provided
@@ -319,6 +320,7 @@ get ()
         return 100
     fi
     url="${1}"
+    local path="${2}"
 
     # Get the canonical URL.
     url="$(canonicalize_url "${url}")"
@@ -387,7 +389,7 @@ get ()
     # Do the GET. Try up to the number of times specified in the tries variable.
     for (( i = tries; i > 0; i-- ))
     do
-        "${curl_cmd[@]}" -m"${timeout}" -fs -- "${scheme}://${url_no_scheme}"
+        "${curl_cmd[@]}" -m"${timeout}" -fs -- "${scheme}://${url_no_scheme}${path}"
         rc=$?
 
         if [[ ${rc} -eq 0 ]]
@@ -420,6 +422,8 @@ create_instance_entry ()
     local cloudflare=n
     local res=
     local version=
+    local flavour=
+    local commit=
     local json=
     local url_type="url"
     local -i rc=0
@@ -453,7 +457,7 @@ create_instance_entry ()
         cloudflare=y
     fi
 
-    res="$(get "${get_opts[@]}" "${url}")"
+    res="$(get "${get_opts[@]}" "${url}" /info.json)"
     rc=$?
 
     if [[ ${rc} -ne 0 ]]
@@ -473,14 +477,19 @@ create_instance_entry ()
         return 3
     fi
 
-    # Scrape the version from the site.
-    #
-    # Future versions of Libreddit may advertise the version in a <meta> tag in
-    # <head>, but it doesn't right now.
-    version="$(<<<"${res}" sed -nE 's/.*\s+id="version">(v([0-9]+\.){2}[0-9]+).*$/\1/p')"
+    # Read the version from /info.json. Forks that set a flavour (e.g.
+    # Nachtalb/redlib) are identified by flavour and commit instead, as their
+    # crate version doesn't follow the fork's changes.
+    version="$(<<<"${res}" jq -er '.crate_version' 2>/dev/null | sed -nE 's/^v?(([0-9]+\.){2}[0-9]+).*$/v\1/p')"
     if [[ -z "${version}" ]]
     then
         return 4
+    fi
+    flavour="$(<<<"${res}" jq -r '.flavour // empty' 2>/dev/null)"
+    if [[ -n "${flavour}" ]]
+    then
+        commit="$(<<<"${res}" jq -r '.git_commit // empty' 2>/dev/null)"
+        commit="${commit:0:7}"
     fi
 
     # Find out if this is an onion/i2p website.
@@ -500,6 +509,18 @@ create_instance_entry ()
     json+="$(printf '"country":"%s"' "${country}")"
     json+=","
     json+="$(printf '"version":"%s"' "${version}")"
+
+    if [[ -n "${flavour}" ]]
+    then
+        json+=","
+        json+="$(printf '"flavour":%s' "$(jq -n --arg v "${flavour}" '$v')")"
+    fi
+
+    if [[ -n "${commit}" ]]
+    then
+        json+=","
+        json+="$(printf '"commit":%s' "$(jq -n --arg v "${commit}" '$v')")"
+    fi
 
     if [[ "${cloudflare}" == "y" ]]
     then

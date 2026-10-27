@@ -26,6 +26,14 @@
                         "pattern": "^v([0-9]+\\.){2}[0-9]+$",
                         "$comment": "Version of Libreddit running on this instance."
                     },
+                    "flavour": {
+                        "type": "string",
+                        "$comment": "Flavour of a fork that reports one in /info.json, e.g. nachtalb."
+                    },
+                    "commit": {
+                        "type": "string",
+                        "$comment": "Short git commit of a flavoured fork."
+                    },
                     "cloudflare": {
                         "type": "boolean",
                         "$comment": "Specifies whether or not the instance sits behind Cloudflare. Cloudflare may monitor traffic to and from this instance."

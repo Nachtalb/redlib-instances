@@ -147,12 +147,14 @@ Each field described:
 
 ### Processing the CSV
 
-The script will process the CSV and for each row connect to the URL and get the version string of the running instance. For each row, if the connection is successful and the script can determine the version, it will yield a JSON object (an "entry") of the form:
+The script will process the CSV and for each row fetch `<url>/info.json` and read the version (`crate_version`) of the running instance. For each row, if the connection is successful and the script can determine the version, it will yield a JSON object (an "entry") of the form:
 
 ```json
 {
     "url": "<url>",
     "version": "<version>",
+    "flavour": "<flavour from /info.json if the instance runs a fork that reports one; null otherwise>",
+    "commit": "<short git commit if a flavour is set; null otherwise>",
     "cloudflare": <true if cloudflare is enabled; null otherwise>,
     "description": "<description if non-empty; null otherwise>"
 }
