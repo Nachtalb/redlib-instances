@@ -97,7 +97,7 @@ WARNING: This script will overwrite the output file if it exists.
         sys.stderr.write("\t" + e.__str__() + "\n")
         return 1
 
-    table_preamble = "|URL|Network|Version|Location|Behind Cloudflare?|Comment|\n|-|-|-|-|-|-|\n"
+    table_preamble = "|URL|Network|Version|Post|Location|Behind Cloudflare?|Comment|\n|-|-|-|-|-|-|-|\n"
     table_rows = []
     for instance in instances["instances"]:
         url = ""
@@ -133,6 +133,8 @@ WARNING: This script will overwrite the output file if it exists.
             if instance.get("commit"):
                 version += "@" + instance["commit"]
 
+        post = {"ok": "\u2705", "failed": "\u274c", "untestable": "not testable"}.get(instance.get("post"), "")
+
         if "country" in instance:
             country = instance["country"]
 
@@ -149,10 +151,11 @@ WARNING: This script will overwrite the output file if it exists.
         except Exception:
             location = country
 
-        table_rows.append("|{0}|{1}|{2}|{3}|{4}|{5}|\n".format(
+        table_rows.append("|{0}|{1}|{2}|{3}|{4}|{5}|{6}|\n".format(
             url,
             network,
             version,
+            post,
             location,
             "\u2705" if cloudflare else "",
             description

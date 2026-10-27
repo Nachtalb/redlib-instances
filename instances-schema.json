@@ -34,6 +34,11 @@
                         "type": "string",
                         "$comment": "Short git commit of a flavoured fork."
                     },
+                    "post": {
+                        "type": "string",
+                        "enum": ["ok", "failed", "untestable"],
+                        "$comment": "Whether the instance shows a post: ok; failed (Redlib answered without it, or the instance is down); untestable (something other than Redlib answered, usually bot detection)."
+                    },
                     "cloudflare": {
                         "type": "boolean",
                         "$comment": "Specifies whether or not the instance sits behind Cloudflare. Cloudflare may monitor traffic to and from this instance."

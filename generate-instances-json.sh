@@ -401,6 +401,42 @@ get ()
     return ${rc}
 }
 
+# Post that check_post opens. Archived, so it never changes.
+POST_PATH="/r/announcements/comments/7jsyqt"
+
+# check_post URL
+#
+# Opens POST_PATH on the instance and prints the result:
+#     ok: Redlib rendered the post.
+#     failed: Redlib answered without the post (e.g. Reddit blocks it), or the
+#         instance is down.
+#     untestable: something other than Redlib answered, usually bot detection
+#         (Cloudflare, Anubis, go-away) in front of the instance.
+check_post ()
+{
+    local body=
+    local code=
+
+    body="$(curl -A "${USER_AGENT}" -m30 -s -w '\n%{http_code}' -- "${1}${POST_PATH}")"
+    code="${body##*$'\n'}"
+    body="${body%$'\n'*}"
+
+    if [[ "${body}" == *'href="/style.css'* ]]
+    then
+        if [[ "${code}" == 200 && "${body}" == *'class="post_title"'* ]]
+        then
+            echo ok
+        else
+            echo failed
+        fi
+    elif [[ "${code}" == 000 || "${code}" == 5* ]]
+    then
+        echo failed
+    else
+        echo untestable
+    fi
+}
+
 # create_instance_entry [-I] [-T] URL COUNTRY_CODE [CLOUDFLARE [DESCRIPTION]]
 #
 # Create JSON object for instance. To specify that the instance is behind
@@ -520,6 +556,12 @@ create_instance_entry ()
     then
         json+=","
         json+="$(printf '"commit":%s' "$(jq -n --arg v "${commit}" '$v')")"
+    fi
+
+    if [[ "${url_type}" == "url" ]]
+    then
+        json+=","
+        json+="$(printf '"post":"%s"' "$(check_post "${url}")")"
     fi
 
     if [[ "${cloudflare}" == "y" ]]
