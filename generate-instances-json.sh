@@ -32,6 +32,10 @@ TODAY="$(date -I -u)"
 # jq is required for JSON processing.
 DEPENDENCIES=(curl jq)
 
+# Python with the cloakbrowser package, which runs cloak-fetch.py. This is an
+# environment variable.
+PYTHON="${PYTHON:-python3}"
+
 # This is the default User-Agent the script will tell curl to use if the
 # environment variable USER_AGENT is not defined.
 DEFAULT_USER_AGENT="libreddit-instance-updater/0.1"
@@ -383,6 +387,20 @@ get ()
         return 103
     fi
 
+    # Clearnet sites are fetched through CloakBrowser (see cloak-fetch.py),
+    # which gets past most bot detection.
+    if [[ "${zone,,}" != "onion" && "${zone,,}" != "i2p" ]]
+    then
+        local file=
+        local meta=
+        echo "${scheme}://${url_no_scheme}${path}" >&"${CLOAK[1]}"
+        IFS=" " read -r file meta <&"${CLOAK[0]}"
+        cat "${file}"
+        rm -f "${file}"
+        printf '\n%s\n' "${meta}"
+        return
+    fi
+
     # Use a custom User-Agent if provided.
     if [[ -n "${USER_AGENT?}" ]]
     then
@@ -425,7 +443,7 @@ offline ()
     [[ "${code}" == 000 && "${tls}" =~ ^0(\.0*)?$ ]] && return
     [[ "${code}" == 5* ]] && return
     [[ "${code}" == 4* && "${code}" != 401 && "${code}" != 403 && "${code}" != 429 ]] && return
-    [[ "${code}" == 3* && -n "${redirect}" && "${redirect,,}" != "${host,,}" ]]
+    [[ -n "${redirect}" && "${redirect,,}" != "${host,,}" ]]
 }
 
 # Post that check_post opens. Archived, so it never changes.
@@ -544,11 +562,11 @@ create_instance_entry ()
     # Read the version from /info.json. Forks that set a flavour (e.g.
     # Nachtalb/redlib) are identified by flavour and commit instead, as their
     # crate version doesn't follow the fork's changes.
-    version="$(<<<"${res}" jq -er '.crate_version' 2>/dev/null | sed -nE 's/^v?(([0-9]+\.){2}[0-9]+).*$/v\1/p')"
-    if [[ -z "${version}" ]] && offline "${url}" "${code}"
+    if offline "${url}" "${code}"
     then
         return 4
     fi
+    version="$(<<<"${res}" jq -er '.crate_version' 2>/dev/null | sed -nE 's/^v?(([0-9]+\.){2}[0-9]+).*$/v\1/p')"
     flavour="$(<<<"${res}" jq -r '.flavour // empty' 2>/dev/null)"
     if [[ -n "${flavour}" ]]
     then
@@ -706,10 +724,14 @@ OPTIONS
 
 ENVIRONMENT
 
+    PYTHON
+        Python with the cloakbrowser package installed. Clearnet instances are
+        fetched through CloakBrowser by cloak-fetch.py. Defaults to python3.
+
     USER_AGENT
         Sets the User-Agent that curl will use when making the GET to each
-        website. By default, this script will tell curl to set its User-Agent
-        string to "${DEFAULT_USER_AGENT}".
+        onion or I2P website. By default, this script will tell curl to set
+        its User-Agent string to "${DEFAULT_USER_AGENT}".
 
     I2P_HTTP_PROXY
         HTTP proxy for connecting to the I2P network. This is required in
@@ -844,6 +866,18 @@ main ()
               return 1
           fi
     fi
+
+    # Start the browser that fetches clearnet sites.
+    coproc CLOAK { "${PYTHON}" "$(dirname "${BASH_SOURCE[0]}")/cloak-fetch.py"; }
+    local ready=
+    until [[ "${ready}" == "ready" ]]
+    do
+        if ! read -r ready <&"${CLOAK[0]}"
+        then
+            echo >&2 "Could not start CloakBrowser. Is cloakbrowser installed for ${PYTHON}?"
+            return 1
+        fi
+    done
 
     # Check to see if we have tor. If we don't, then we will have to import
     # the existing tor instances from the JSON.

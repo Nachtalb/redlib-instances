@@ -113,10 +113,14 @@ OPTIONS
 
 ENVIRONMENT
 
+    PYTHON
+        Python with the cloakbrowser package installed. Clearnet instances are
+        fetched through CloakBrowser by cloak-fetch.py. Defaults to python3.
+
     USER_AGENT
         Sets the User-Agent that curl will use when making the GET to each
-        website. By default, this script will tell curl to set its User-Agent
-        string to "redlib-instance-updater/0.1".
+        onion or I2P website. By default, this script will tell curl to set
+        its User-Agent string to "redlib-instance-updater/0.1".
 
     I2P_HTTP_PROXY
         HTTP proxy for connecting to the I2P network. This is required in
@@ -126,7 +130,7 @@ ENVIRONMENT
 
 ### Prerequisites
 
-`generate-instances-json.sh` requires **curl** in order to make HTTP(S) requests and **jq** to process and format JSON.
+`generate-instances-json.sh` requires **Python** with [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) (`pip install cloakbrowser`) to fetch clearnet instances, **curl** to fetch onion and I2P instances, and **jq** to process and format JSON. CloakBrowser runs with `humanize` and gets past most bot detection in front of instances.
 
 **tor** is required for processing onion sites, but the script will skip instances on Tor if tor is not running. 
 An option exists to import onion sites from an existing JSON file should you wish not to use tor.

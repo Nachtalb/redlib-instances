@@ -20,6 +20,16 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@v3
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install CloakBrowser
+      run: |
+        pip install cloakbrowser
+        python -m playwright install-deps chromium
+
     - name: Generate instances
       run: |
        ./generate-instances-json.sh -e -i ./instances.txt -I ./instances.json -o ./instances.json
