@@ -5,29 +5,183 @@
       "url": "https://safereddit.com",
       "country": "US",
       "version": "v0.36.0",
+      "status": "online",
+      "post": "failed",
       "description": "SFW only"
     },
     {
       "url": "https://redlib.catsarch.com",
       "country": "US",
-      "version": "v0.40.0"
+      "version": "v0.40.0",
+      "status": "online",
+      "flavour": "ButteredCats",
+      "commit": "53bf6af",
+      "source": "https://github.com/ButteredCats/redlib/tree/catsarch",
+      "post": "ok"
+    },
+    {
+      "url": "https://reddit.idevicehacked.com",
+      "country": "US",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://redlib.freedit.eu",
+      "country": "US",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://rl.bloat.cat",
+      "country": "RO",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://redlib.nohost.network",
+      "country": "MX",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://redlib.r4fo.com",
+      "country": "DE",
+      "status": "untestable",
+      "post": "untestable",
+      "cloudflare": true
+    },
+    {
+      "url": "https://redlib.ducks.party",
+      "country": "NL",
+      "version": "v0.40.0",
+      "status": "online",
+      "post": "failed"
+    },
+    {
+      "url": "https://red.artemislena.eu",
+      "country": "DE",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "ok",
+      "description": "Be crime do gay"
     },
     {
       "url": "https://redlib.cow.rip",
       "country": "IN",
-      "version": "v0.40.0",
+      "status": "untestable",
+      "post": "untestable",
       "cloudflare": true
+    },
+    {
+      "url": "https://redlib.privacyredirect.com",
+      "country": "FI",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "ok"
+    },
+    {
+      "url": "https://redlib.seasi.dev",
+      "country": "SG",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://reddit.nerdvpn.de",
+      "country": "UA",
+      "status": "untestable",
+      "post": "untestable",
+      "description": "SFW only"
+    },
+    {
+      "url": "https://redlib.nadeko.net",
+      "country": "CL",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "ok",
+      "description": "I don't like reddit."
+    },
+    {
+      "url": "https://redlib.4o1x5.dev",
+      "country": "HU",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://redlib.reallyaweso.me",
+      "country": "DE",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "ok",
+      "description": "A reallyaweso.me redlib instance!"
+    },
+    {
+      "url": "https://rl.blitzw.in",
+      "country": "DE",
+      "status": "untestable",
+      "post": "untestable",
+      "description": "hosted by a Neurospicy-flavored TFA Blitzwing fanatic at blitzw.in"
     },
     {
       "url": "https://reddit.rtrace.io",
       "country": "AT",
       "version": "v0.40.0",
+      "status": "online",
+      "post": "failed",
       "description": "Caution: +10% increased chance to contract Ligma"
     },
     {
-      "url": "https://redlib.privadency.com",
+      "url": "https://lr.ptr.moe",
       "country": "DE",
-      "version": "v0.36.0"
+      "version": "v0.40.0",
+      "status": "online",
+      "post": "ok",
+      "cloudflare": true
+    },
+    {
+      "url": "https://redlib.kareem.one",
+      "country": "ID",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "untestable",
+      "cloudflare": true
+    },
+    {
+      "url": "https://redlib.libre.tw",
+      "country": "FR",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://redlib.thepixora.com",
+      "country": "XX",
+      "status": "untestable",
+      "post": "untestable",
+      "cloudflare": true
+    },
+    {
+      "url": "https://redlib.miningtcup.me",
+      "country": "US",
+      "status": "untestable",
+      "post": "untestable"
+    },
+    {
+      "url": "https://r.naa.gg",
+      "country": "CH",
+      "version": "v0.36.0",
+      "status": "online",
+      "flavour": "Nachtalb",
+      "commit": "296bfc8",
+      "source": "https://github.com/Nachtalb/redlib",
+      "post": "untestable",
+      "cloudflare": true
+    },
+    {
+      "url": "https://redlib.utilibre.org",
+      "country": "XX",
+      "version": "v0.36.0",
+      "status": "online",
+      "post": "ok",
+      "cloudflare": true
     },
     {
       "onion": "http://red.lpoaj7z2zkajuhgnlltpeqh3zyq7wk2iyeggqaduhgxhyajtdt2j7wad.onion",
