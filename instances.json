@@ -1,6 +1,11 @@
 {
-  "updated": "2026-11-09",
+  "updated": "2026-11-11",
   "instances": [
+    {
+      "url": "https://redlib.freedit.eu",
+      "country": "US",
+      "version": "v0.40.0"
+    },
     {
       "url": "https://redlib.cow.rip",
       "country": "IN",
