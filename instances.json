@@ -1,10 +1,16 @@
 {
-  "updated": "2026-11-13",
+  "updated": "2026-11-15",
   "instances": [
     {
       "url": "https://redlib.freedit.eu",
       "country": "US",
       "version": "v0.40.0"
+    },
+    {
+      "url": "https://redlib.r4fo.com",
+      "country": "DE",
+      "version": "v0.36.0",
+      "cloudflare": true
     },
     {
       "url": "https://redlib.cow.rip",
