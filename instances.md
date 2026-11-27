@@ -2,6 +2,7 @@
 |-|-|-|-|-|-|
 |https://safereddit.com|WWW|v0.69.0|🇺🇸 US||SFW only|
 |https://redlib.cow.rip|WWW|v0.40.0|🇮🇳 IN|✅||
+|https://redlib.privacy.deals|WWW|v0.69.0|🇹🇷 true|||
 |https://redlib.nadeko.net|WWW|v0.40.0|🇨🇱 CL||I don't like reddit.|
 |https://redlib.reallyaweso.me|WWW|v0.69.0|🇩🇪 DE||A reallyaweso.me redlib instance!|
 |https://redlib.tiekoetter.com|WWW|v0.40.0|🇩🇪 DE|||

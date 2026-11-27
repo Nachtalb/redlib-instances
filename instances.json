@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-25",
+  "updated": "2026-11-27",
   "instances": [
     {
       "url": "https://safereddit.com",
@@ -12,6 +12,11 @@
       "country": "IN",
       "version": "v0.40.0",
       "cloudflare": true
+    },
+    {
+      "url": "https://redlib.privacy.deals",
+      "country": "true",
+      "version": "v0.69.0"
     },
     {
       "url": "https://redlib.nadeko.net",
